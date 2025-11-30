@@ -224,6 +224,14 @@ export default function AdminDashboard({ onLogout }) {
                 <input type="email" value={formData.Email || ''} onChange={e => setFormData({...formData, Email: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" value={formData.Password || ''} onChange={e => setFormData({...formData, Password: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Contact No</label>
+                <input type="text" value={formData.Contact_no || ''} onChange={e => setFormData({...formData, Contact_no: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Role</label>
                 <select value={formData.Role_Type || ''} onChange={e => setFormData({...formData, Role_Type: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                   <option value="student">Student</option>
@@ -237,20 +245,34 @@ export default function AdminDashboard({ onLogout }) {
           return (
             <div className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-gray-700">Course Code</label>
+                <input type="text" value={formData.Course_Code || ''} onChange={e => setFormData({...formData, Course_Code: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Course Title</label>
-                <input type="text" value={formData.Course_Title || ''} onChange={e => setFormData({...formData, Course_Title: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                <input type="text" value={formData.Course_Title || ''} onChange={e => setFormData({...formData, Course_Title: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea value={formData.Description || ''} onChange={e => setFormData({...formData, Description: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                <textarea value={formData.Description || ''} onChange={e => setFormData({...formData, Description: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Category</label>
-                <input type="text" value={formData.Category || ''} onChange={e => setFormData({...formData, Category: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                <input type="text" value={formData.Category || ''} onChange={e => setFormData({...formData, Category: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Instructor</label>
+                <select value={formData.I_USER_ID || ''} onChange={e => setFormData({...formData, I_USER_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required>
+                  <option value="">Select Instructor</option>
+                  {users.filter(u => u.Role_Type === 'instructor').map(user => (
+                    <option key={user.User_ID} value={user.User_ID}>{user.First_Name} {user.Last_Name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Difficulty Level</label>
-                <select value={formData.Difficulty_Level || ''} onChange={e => setFormData({...formData, Difficulty_Level: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                <select value={formData.Difficulty_Level || ''} onChange={e => setFormData({...formData, Difficulty_Level: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required>
+                  <option value="">Select Difficulty</option>
                   <option value="Beginner">Beginner</option>
                   <option value="Intermediate">Intermediate</option>
                   <option value="Advanced">Advanced</option>
@@ -262,20 +284,24 @@ export default function AdminDashboard({ onLogout }) {
           return (
             <div className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-gray-700">Enrollment_ID</label>
+                <input type="number" value={formData.Enrollment_ID || 0} onChange={e => setFormData({...formData, Enrollment_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Student ID</label>
                 <select value={formData.S_User_ID || ''} onChange={e => setFormData({...formData, S_User_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                   <option value="">Select Student</option>
                   {users.filter(u => u.Role_Type === 'student').map(user => (
-                    <option key={user.User_ID} value={user.User_ID}>{user.First_Name} {user.Last_Name}</option>
+                    <option key={user.User_ID} value={user.User_ID}>{user.User_ID}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Course</label>
+                <label className="block text-sm font-medium text-gray-700">Course Code</label>
                 <select value={formData.Course_Code || ''} onChange={e => setFormData({...formData, Course_Code: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                  <option value="">Select Course</option>
+                  <option value="">Select Course Code</option>
                   {courses.map(course => (
-                    <option key={course.Course_Code} value={course.Course_Code}>{course.Course_Title}</option>
+                    <option key={course.Course_Code} value={course.Course_Code}>{course.Course_Code}</option>
                   ))}
                 </select>
               </div>
@@ -286,6 +312,19 @@ export default function AdminDashboard({ onLogout }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Lessons Completed</label>
                 <input type="number" value={formData.Lessons_Completed || 0} onChange={e => setFormData({...formData, Lessons_Completed: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Total Lessons</label>
+                <input type="number" value={formData.Total_Lessons || 0} onChange={e => setFormData({...formData, Total_Lessons: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select value={formData.Status || ''} onChange={e => setFormData({...formData, Status: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Status</option>
+                  <option value="Beginner">Completed</option>
+                  <option value="Intermediate">In Progress</option>
+                  <option value="Advanced">Dropped</option>
+                </select>
               </div>
             </div>
           );
