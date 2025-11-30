@@ -69,3 +69,11 @@ export const discussionAPI = {
   update: (id, discussionData) => apiCall(`/discussions/${id}`, { method: 'PUT', body: JSON.stringify(discussionData) }),
   delete: (id) => apiCall(`/discussions/${id}`, { method: 'DELETE' }),
 };
+
+// Reply API calls
+export const replyAPI = {
+  getAll: () => apiCall('/replies'),
+  create: (replyData) => apiCall('/replies', { method: 'POST', body: JSON.stringify(replyData) }),
+  update: (id, replyData) => apiCall(`/replies/${id}`, { method: 'PUT', body: JSON.stringify(replyData) }),
+  delete: (id) => apiCall(`/replies/${id}`, { method: 'DELETE' }),
+};
