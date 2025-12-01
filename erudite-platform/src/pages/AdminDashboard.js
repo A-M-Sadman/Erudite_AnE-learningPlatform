@@ -199,7 +199,17 @@ export default function AdminDashboard({ onLogout }) {
 
   // Modal Components
   const CreateEditModal = ({ isEdit, table, record, onSave, onClose }) => {
-    const [formData, setFormData] = useState(record || {});
+    const [formData, setFormData] = useState(
+  record || {
+    First_Name: "",
+    Last_Name: "",
+    Email: "",
+    Password: "",
+    Contact_no: "",
+    Role_Type: "", // DEFAULT VALUE
+  }
+);
+
     
     const handleSubmit = (e) => {
       e.preventDefault();
