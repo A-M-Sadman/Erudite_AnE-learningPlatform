@@ -53,3 +53,60 @@ exports.getAllQuizzes = async () => {
   `);
   return rows;
 };
+
+// quiz.service.js - fix deleteQuiz function
+exports.deleteQuiz = async (quizNo) => {
+  try {
+    console.log('🗑️ Deleting quiz, quizNo:', quizNo);
+    
+    // Check if quizNo is valid
+    if (quizNo === undefined || quizNo === null) {
+      throw new Error('Quiz number is required for deletion');
+    }
+    
+    const sql = 'DELETE FROM QUIZ WHERE Quiz_No = ?';
+    console.log('📝 Delete SQL:', sql);
+    console.log('📝 Delete parameter:', quizNo);
+    
+    const [result] = await db.execute(sql, [quizNo]);
+    
+    console.log('✅ Delete result:', result.affectedRows, 'rows affected');
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('❌ Error deleting quiz:', error);
+    throw error;
+  }
+};
+
+// quiz.service.js - fix updateQuiz function
+exports.updateQuiz = async (quizNo, data) => {
+  try {
+    console.log('📝 Updating quiz:', quizNo, data); // Add logging
+    
+    // Check if data exists
+    if (!data) {
+      throw new Error('No data provided for update');
+    }
+    
+    // Extract with default values to prevent undefined errors
+    const { 
+      quizTitle = '', 
+      courseCode = ''
+    } = data;
+    
+    const sql = `UPDATE QUIZ 
+                 SET Quiz_Title = ?, Course_Code = ?
+                 WHERE Quiz_No = ?`;
+    
+    const [result] = await db.execute(sql, [
+      quizTitle,
+      courseCode,
+      quizNo
+    ]);
+    
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('Error in updateQuiz:', error);
+    throw error;
+  }
+};

@@ -291,8 +291,27 @@ export const quizAPI = {
     return api.post('/quiz', formattedData);
   },
   
-  update: (id, data) => api.put(`/quiz/${id}`, data),
-  delete: (id) => api.delete(`/quiz/${id}`)
+  // In services/api.js - quizAPI.update
+  update: (id, data) => {
+    const formattedData = {
+      quizTitle: data.Quiz_Title,
+      courseCode: data.Course_Code
+    };
+    
+    console.log('📤 Updating quiz:', formattedData);
+    return api.put(`/quiz/${id}`, formattedData);
+  },
+  delete: (id) => {
+    console.log('📞 Deleting quiz ID:', id);
+    
+    // Check if id is valid
+    if (!id) {
+      console.error('❌ No quiz ID provided for deletion');
+      return Promise.reject(new Error('Quiz ID is required'));
+    }
+    
+    return api.delete(`/quiz/${id}`);
+  },
 };
 
 // Discussion API with data transformation
