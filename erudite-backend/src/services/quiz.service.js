@@ -1,0 +1,55 @@
+const db = require("../db/database");
+
+exports.getQuizzesByCourse = async (courseCode) => {
+  const [rows] = await db.execute("SELECT * FROM QUIZ WHERE Course_Code = ?", [courseCode]);
+  return rows;
+};
+
+exports.getQuiz = async (quizNo, setNo) => {
+  const [rows] = await db.execute("SELECT * FROM QUIZ WHERE Quiz_No = ? AND Set_No = ?", [quizNo, setNo]);
+  const [questions] = await db.execute("SELECT * FROM QUIZ_QUESTION WHERE Quiz_No = ? AND Set_No = ?", [quizNo, setNo]);
+  return { meta: rows[0], questions };
+};
+
+exports.createQuiz = async ({ quizNo, setNo, quizTitle, sUserId, iUserId, courseCode }) => {
+  await db.execute("INSERT INTO QUIZ (Quiz_No, Set_No, Quiz_Title, S_User_ID, I_USER_ID, Course_Code) VALUES (?, ?, ?, ?, ?, ?)", [quizNo, setNo, quizTitle, sUserId || null, iUserId || null, courseCode]);
+};
+
+exports.addQuestions = async (questionsArray) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    for (const q of questionsArray) {
+      const { quizNo, setNo, questionNo, topic, question, marks } = q;
+      await conn.execute("INSERT INTO QUIZ_QUESTION (Quiz_No, Set_No, Question_No, Topic, Question, Marks) VALUES (?, ?, ?, ?, ?, ?)", [quizNo, setNo, questionNo, topic, question, marks]);
+    }
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
+exports.solveQuiz = async ({ quizNo, setNo, questionNo, solution, earnedMarks }) => {
+  await db.execute("INSERT INTO QUIZ_SOLVE (Quiz_No, Set_No, Question_No, Solution, Earned_Marks) VALUES (?, ?, ?, ?, ?)", [quizNo, setNo, questionNo, solution, earnedMarks]);
+};
+
+exports.addMark = async ({ sUserId, quizNo, setNo, quizMark }) => {
+  await db.execute("INSERT INTO QUIZ_STUDENT (S_User_ID, Quiz_No, Set_No, Quiz_Mark) VALUES (?, ?, ?, ?)", [sUserId, quizNo, setNo, quizMark]);
+};
+
+exports.getStudentQuizMarks = async (sUserId) => {
+  const [rows] = await db.execute("SELECT * FROM QUIZ_STUDENT WHERE S_User_ID = ?", [sUserId]);
+  return rows;
+};
+
+exports.getAllQuizzes = async () => {
+  const [rows] = await db.execute(`
+    SELECT q.*, c.Course_Title 
+    FROM QUIZ q
+    LEFT JOIN COURSE c ON q.Course_Code = c.Course_Code
+  `);
+  return rows;
+};

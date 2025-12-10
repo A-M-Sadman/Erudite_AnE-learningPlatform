@@ -5,7 +5,7 @@ import {
   Eye, Download, TrendingUp, Award,
   UserCheck, MessageSquare, User, ChevronDown,
   Save, X as CloseIcon, Video, Presentation, FileCheck,
-  MessageCircle, LogOut, Menu, X, Bell
+  MessageCircle, LogOut, Menu, X, Bell, Star
 } from 'lucide-react';
 import { 
   userAPI, 
@@ -13,8 +13,12 @@ import {
   enrollmentAPI, 
   contentAPI, 
   quizAPI, 
-  discussionAPI 
+  discussionAPI,
+  // techSupportAPI,
+  evaluationAPI,
+  commentAPI
 } from '../services/api';
+
 
 export default function AdminDashboard({ onLogout }) {
   // State variables - ALL inside the component
@@ -36,41 +40,90 @@ export default function AdminDashboard({ onLogout }) {
   const [content, setContent] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [discussions, setDiscussions] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [ratings, setRatings] = useState([]);
+  
+  const [comments, setComments] = useState([]);
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [selectedDiscussion, setSelectedDiscussion] = useState(null);
+  const [replyText, setReplyText] = useState('');
+
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewData, setViewData] = useState(null);
+  const [viewType, setViewType] = useState('');
 
   // Fetch data function - INSIDE the component
-  const fetchData = async (table) => {
+  const fetchData = async (table, id = null) => {
+    console.log(`=== FETCHING ${table.toUpperCase()} ===`);
     try {
-      let data;
+      let response;
       switch(table) {
         case 'users':
-          data = await userAPI.getAll();
-          setUsers(data);
+          response = await userAPI.getAll();
+          console.log('First user object:', response[0]);
+          console.log('User keys:', response[0] ? Object.keys(response[0]) : 'No user');
+          console.log('User has Contact_no?', response[0]?.Contact_no);
+          setUsers(Array.isArray(response) ? response : []);
           break;
+
         case 'courses':
-          data = await courseAPI.getAll();
-          setCourses(data);
+          response = await courseAPI.getAll();
+          console.log('First course object:', response[0]);
+          console.log('Course has I_USER_ID?', response[0]?.I_USER_ID);
+          setCourses(Array.isArray(response) ? response : []);
           break;
         case 'enrollments':
-          data = await enrollmentAPI.getAll();
-          setEnrollments(data);
+          response = await enrollmentAPI.getAll();
+          console.log('Enrollments raw response:', response);
+          setEnrollments(Array.isArray(response) ? response : []);
           break;
         case 'content':
-          data = await contentAPI.getAll();
-          setContent(data);
+          response = await contentAPI.getAll();
+          console.log('Content raw response:', response);
+          setContent(Array.isArray(response) ? response : []);
           break;
         case 'quizzes':
-          data = await quizAPI.getAll();
-          setQuizzes(data);
+          response = await quizAPI.getAll();
+          console.log('Quizzes raw response:', response);
+          setQuizzes(Array.isArray(response) ? response : []);
           break;
         case 'discussions':
-          data = await discussionAPI.getAll();
-          setDiscussions(data);
+          response = await discussionAPI.getAll();
+          console.log('Discussions raw response:', response);
+          setDiscussions(Array.isArray(response) ? response : []);
+          break;
+        case 'comments':
+          response = await commentAPI.getAll(id);  // 'id' should be passed as parameter
+          setComments(Array.isArray(response) ? response : []);
+          break;
+        case 'certificates':
+          response = await evaluationAPI.getAllCertificates();
+          console.log('Certificates raw response:', response);
+          setCertificates(Array.isArray(response) ? response : []);
+          break;
+        case 'ratings':
+          response = await evaluationAPI.getAllRatings();
+          console.log('Ratings raw response:', response);
+          setRatings(Array.isArray(response) ? response : []);
           break;
         default:
-          break;
+          console.warn(`Unknown table: ${table}`);
       }
     } catch (error) {
-      console.error(`Error fetching ${table}:`, error);
+      console.error(`❌ Error fetching ${table}:`, error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error message:', error.message);
+      // Set empty arrays on error
+      switch(table) {
+        case 'users': setUsers([]); break;
+        case 'courses': setCourses([]); break;
+        case 'enrollments': setEnrollments([]); break;
+        case 'content': setContent([]); break;
+        case 'quizzes': setQuizzes([]); break;
+        case 'discussions': setDiscussions([]); break;
+        case 'certificates': setCertificates([]); break;
+        case 'ratings': setRatings([]); break;
+      }
     }
   };
 
@@ -82,6 +135,8 @@ export default function AdminDashboard({ onLogout }) {
     fetchData('content');
     fetchData('quizzes');
     fetchData('discussions');
+    fetchData('certificates');  
+    fetchData('ratings');       
   }, []);
 
   // Update your handleCreate function to use fetchData
@@ -105,6 +160,12 @@ export default function AdminDashboard({ onLogout }) {
           break;
         case 'discussions':
           await discussionAPI.create(data);
+          break;
+        case 'certificates':
+          await evaluationAPI.createCertificate(data);
+          break;
+        case 'ratings':
+          await evaluationAPI.createEvaluation(data);
           break;
         default:
           break;
@@ -141,6 +202,12 @@ export default function AdminDashboard({ onLogout }) {
         case 'discussions':
           await discussionAPI.update(data.DISCUSSION_ID, data);
           break;
+        case 'certificates':
+          await evaluationAPI.updateCertificate(data.Certificate_ID, data);
+          break;
+        case 'ratings':
+          await evaluationAPI.updateEvaluation(data.S_User_ID, data);
+          break;
         default:
           break;
       }
@@ -175,6 +242,12 @@ export default function AdminDashboard({ onLogout }) {
           case 'discussions':
             await discussionAPI.delete(id);
             break;
+          case 'certificates':
+            await evaluationAPI.deleteCertificate(id);
+            break;
+          case 'ratings':
+            await evaluationAPI.deleteEvaluation(id);
+            break;
           default:
             break;
         }
@@ -197,20 +270,106 @@ export default function AdminDashboard({ onLogout }) {
     );
   };
 
+  // view functions:
+  const handleView = (table, record) => {
+    setViewType(table);
+    setViewData(record);
+    setViewModalOpen(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setViewModalOpen(false);
+    setViewData(null);
+    setViewType('');
+  };
+
+  // Add these after your other handlers (around line 185, before CreateEditModal):
+
+  // Handle reply button click
+  const handleReplyClick = (discussion) => {
+    setSelectedDiscussion(discussion);
+    setShowReplyModal(true);
+    setReplyText('');
+    
+    console.log('🔍 Loading comments for discussion:', discussion.DISCUSSION_ID);
+    
+    // Load comments for this discussion
+    fetchComments(discussion.DISCUSSION_ID);
+  };
+
+  // Handle posting a reply
+  const handlePostReply = async () => {
+    if (!replyText.trim() || !selectedDiscussion) return;
+    
+    try {
+      const replyData = {
+        DISCUSSION_ID: selectedDiscussion.DISCUSSION_ID,
+        User_ID: selectedDiscussion.User_ID,  // Use discussion author's ID
+        Comment: replyText
+      };
+      
+      await commentAPI.create(replyData);
+      
+      // Refresh comments
+      await fetchComments(selectedDiscussion.DISCUSSION_ID);
+      
+      // Close modal and reset
+      setShowReplyModal(false);
+      setReplyText('');
+      setSelectedDiscussion(null);
+      
+      alert('Reply posted successfully!');
+    } catch (error) {
+      console.error('Error posting reply:', error);
+      alert('Error posting reply');
+    }
+  };
+
+  // Handle delete comment
+  const handleDeleteComment = async (commentId) => {
+    if (window.confirm('Are you sure you want to delete this comment?')) {
+      try {
+        await commentAPI.delete(commentId);
+        
+        // Refresh comments
+        if (selectedDiscussion) {
+          await fetchComments(selectedDiscussion.DISCUSSION_ID);
+        }
+        
+        alert('Comment deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting comment:', error);
+        alert('Error deleting comment');
+      }
+    }
+  };
+
+  // Separate function to fetch comments
+  const fetchComments = async (discussionId) => {
+    try {
+      console.log('📞 Fetching comments API for discussionId:', discussionId);
+      const response = await commentAPI.getAll(discussionId);
+      console.log('📥 Comments API response:', response);
+      setComments(Array.isArray(response) ? response : []);
+    } catch (error) {
+      console.error('❌ Error fetching comments:', error);
+      setComments([]);
+    }
+  };
+
   // Modal Components
   const CreateEditModal = ({ isEdit, table, record, onSave, onClose }) => {
     const [formData, setFormData] = useState(
-  record || {
-    First_Name: "",
-    Last_Name: "",
-    Email: "",
-    Password: "",
-    Contact_no: "",
-    Role_Type: "", // DEFAULT VALUE
-  }
-);
+      record || {
+        First_Name: "",
+        Last_Name: "",
+        Email: "",
+        Password: "",
+        Contact_no: "",
+        Role_Type: "", // DEFAULT VALUE
+      }
+    );  
 
-    
     const handleSubmit = (e) => {
       e.preventDefault();
       onSave(table, formData);
@@ -272,10 +431,14 @@ export default function AdminDashboard({ onLogout }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Instructor</label>
-                <select value={formData.I_USER_ID || ''} onChange={e => setFormData({...formData, I_USER_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required>
+                <select value={formData.I_USER_ID || ''} onChange={e => setFormData({...formData, I_USER_ID: e.target.value ? parseInt(e.target.value) : null})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" required>
                   <option value="">Select Instructor</option>
-                  {users.filter(u => u.Role_Type === 'instructor').map(user => (
-                    <option key={user.User_ID} value={user.User_ID}>{user.First_Name} {user.Last_Name}</option>
+                  {users
+                  .filter(user => user.Role_Type === "Instructor")
+                  .map(user => (
+                    <option key={user.User_ID} value={user.User_ID}>
+                      {user.First_Name} {user.Last_Name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -293,16 +456,20 @@ export default function AdminDashboard({ onLogout }) {
         case 'enrollments':
           return (
             <div className="space-y-4">
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700">Enrollment_ID</label>
                 <input type="number" value={formData.Enrollment_ID || 0} onChange={e => setFormData({...formData, Enrollment_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
-              </div>
+              </div> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">Student ID</label>
                 <select value={formData.S_User_ID || ''} onChange={e => setFormData({...formData, S_User_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
                   <option value="">Select Student</option>
-                  {users.filter(u => u.Role_Type === 'student').map(user => (
-                    <option key={user.User_ID} value={user.User_ID}>{user.User_ID}</option>
+                  {users
+                  .filter(user => user.Role_Type === "Student")
+                  .map(user => (
+                    <option key={user.User_ID} value={user.User_ID}>
+                      {user.First_Name} {user.Last_Name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -373,6 +540,14 @@ export default function AdminDashboard({ onLogout }) {
           return (
             <div className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-gray-700">Quiz No</label>
+                <input type="number" value={formData.Quiz_No || ''} onChange={e => setFormData({...formData, Quiz_No: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Set No</label>
+                <input type="number" value={formData.Set_No || ''} onChange={e => setFormData({...formData, Set_No: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Quiz Title</label>
                 <input type="text" value={formData.Quiz_Title || ''} onChange={e => setFormData({...formData, Quiz_Title: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
               </div>
@@ -434,6 +609,96 @@ export default function AdminDashboard({ onLogout }) {
               </div>
             </div>
           );
+        // Add to CreateEditModal's renderFormFields function
+        case 'certificates':
+          return (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Student</label>
+                <select value={formData.S_User_ID || ''} onChange={e => setFormData({...formData, S_User_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Select Student</option>
+                  {users
+                  .filter(user => user.Role_Type === "Student")
+                  .map(user => (
+                    <option key={user.User_ID} value={user.User_ID}>
+                      {user.First_Name} {user.Last_Name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Course</label>
+                <select value={formData.Course_Code || ''} onChange={e => setFormData({...formData, Course_Code: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Select Course</option>
+                  {courses.map(course => (
+                    <option key={course.Course_Code} value={course.Course_Code}>{course.Course_Title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Issue Date</label>
+                <input type="date" value={formData.Issue_Date || ''} onChange={e => setFormData({...formData, Issue_Date: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+            </div>
+          );
+
+        case 'ratings':
+          return (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Student</label>
+                <select value={formData.S_User_ID || ''} onChange={e => setFormData({...formData, S_User_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Select Student</option>
+                  {users
+                  .filter(user => user.Role_Type === "Student")
+                  .map(user => (
+                    <option key={user.User_ID} value={user.User_ID}>
+                      {user.First_Name} {user.Last_Name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Instructor</label>
+                <select value={formData.I_USER_ID || ''} onChange={e => setFormData({...formData, I_USER_ID: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Select Instructor</option>
+                  {users
+                  .filter(user => user.Role_Type === "Instructor")
+                  .map(user => (
+                    <option key={user.User_ID} value={user.User_ID}>
+                      {user.First_Name} {user.Last_Name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Course</label>
+                <select value={formData.Course_Code || ''} onChange={e => setFormData({...formData, Course_Code: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Select Course</option>
+                  {courses.map(course => (
+                    <option key={course.Course_Code} value={course.Course_Code}>{course.Course_Title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Course Rating (1-5)</label>
+                <select value={formData.Course_Rating || ''} onChange={e => setFormData({...formData, Course_Rating: parseInt(e.target.value)})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Select Rating</option>
+                  {[1, 2, 3, 4, 5].map(num => (
+                    <option key={num} value={num}>{num} Star{num !== 1 ? 's' : ''}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Student Grade (%)</label>
+                <input type="number" min="0" max="100" step="0.1" value={formData.Student_Grade || ''} onChange={e => setFormData({...formData, Student_Grade: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Instructor Review</label>
+                <textarea value={formData.Instructor_Review || ''} onChange={e => setFormData({...formData, Instructor_Review: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" rows="3" />
+              </div>
+            </div>
+          );  
         default:
           return <div>Form for {table}</div>;
       }
@@ -529,7 +794,10 @@ export default function AdminDashboard({ onLogout }) {
                 <td className="px-6 py-4 text-sm text-gray-800">{user.Contact_no}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button 
+                      onClick={() => handleView('users', user)}  // Change 'users' to appropriate type
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
                       <Eye className="w-4 h-4 text-gray-600" />
                     </button>
                     <button 
@@ -617,7 +885,10 @@ export default function AdminDashboard({ onLogout }) {
                 <td className="px-6 py-4 text-sm text-gray-800">{course.I_USER_ID}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button 
+                      onClick={() => handleView('courses', course)}  
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
                       <Eye className="w-4 h-4 text-gray-600" />
                     </button>
                     <button 
@@ -732,7 +1003,10 @@ export default function AdminDashboard({ onLogout }) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleView('enrollments', enrollment)}  
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
                         <Eye className="w-4 h-4 text-gray-600" />
                       </button>
                       <button 
@@ -853,7 +1127,10 @@ export default function AdminDashboard({ onLogout }) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleView('content', item)}  
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
                         <Eye className="w-4 h-4 text-gray-600" />
                       </button>
                       <button 
@@ -959,7 +1236,10 @@ export default function AdminDashboard({ onLogout }) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleView('quizzes', quiz)} 
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
                         <Eye className="w-4 h-4 text-gray-600" />
                       </button>
                       <button 
@@ -1074,7 +1354,10 @@ export default function AdminDashboard({ onLogout }) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleView('discussions', discussion)}  
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
                         <Eye className="w-4 h-4 text-gray-600" />
                       </button>
                       <button 
@@ -1089,8 +1372,17 @@ export default function AdminDashboard({ onLogout }) {
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleReplyClick(discussion)}  // This should be defined now
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
+                        title="View/Add Comments"
+                      >
                         <MessageSquare className="w-4 h-4 text-green-600" />
+                        {discussion.Reply_Count > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                            {discussion.Reply_Count}
+                          </span>
+                        )}
                       </button>
                     </div>
                   </td>
@@ -1099,6 +1391,238 @@ export default function AdminDashboard({ onLogout }) {
             })}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+
+  const renderCertificatesTable = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-xl font-bold text-gray-800">Certificate Management</h2>
+          <div className="flex gap-3">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search certificates..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-full sm:w-64"
+              />
+            </div>
+            <button 
+              onClick={() => { setCurrentTable('certificates'); setShowCreateModal(true); }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Issue Certificate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cert ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Course</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredData(certificates, ['Student_Name', 'Course_Title', 'Course_Code']).map((cert) => (
+              <tr key={cert.Certificate_ID} className="hover:bg-gray-50">
+                <td className="px-6 py-4 text-sm font-medium text-gray-800">#{cert.Certificate_ID}</td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                      {cert.Student_Name?.charAt(0) || 'S'}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{cert.Student_Name}</p>
+                      <p className="text-sm text-gray-500">ID: {cert.S_User_ID}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="font-medium text-gray-800">{cert.Course_Title}</p>
+                  <p className="text-sm text-gray-500">{cert.Course_Code}</p>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-800">{cert.Issue_Date}</td>
+                <td className="px-6 py-4">
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                    Issued
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <Eye className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <Download className="w-4 h-4 text-green-600" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete('certificates', cert.Certificate_ID)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderRatingsTable = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-xl font-bold text-gray-800">Course Ratings & Reviews</h2>
+          <div className="flex gap-3">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search ratings..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none w-full sm:w-64"
+              />
+            </div>
+            <button 
+              onClick={() => { setCurrentTable('ratings'); setShowCreateModal(true); }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Rating
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Instructor</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Course</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Grade</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Review</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredData(ratings, ['Student_Name', 'Instructor_Name', 'Course_Title', 'Instructor_Review']).map((evaluationItem) => (
+              <tr key={`${evaluationItem.S_User_ID}-${evaluationItem.Course_Code}`} className="hover:bg-gray-50">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                      {evaluationItem.Student_Name?.charAt(0) || 'S'}
+                    </div>
+                    <span className="text-sm text-gray-800">{evaluationItem.Student_Name}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                      {evaluationItem.Instructor_Name?.charAt(0) || 'I'}
+                    </div>
+                    <span className="text-sm text-gray-800">{evaluationItem.Instructor_Name}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="text-sm text-gray-800">{evaluationItem.Course_Title}</p>
+                  <p className="text-xs text-gray-500">{evaluationItem.Course_Code}</p>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className={`text-lg ${i < evaluationItem.Course_Rating ? 'text-yellow-400' : 'text-gray-300'}`}>
+                        ★
+                      </span>
+                    ))}
+                    <span className="ml-1 text-sm font-medium text-gray-700">{evaluationItem.Course_Rating}/5</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    parseFloat(evaluationItem.Student_Grade) >= 90 ? 'bg-green-100 text-green-700' :
+                    parseFloat(evaluationItem.Student_Grade) >= 80 ? 'bg-blue-100 text-blue-700' :
+                    parseFloat(evaluationItem.Student_Grade) >= 70 ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {evaluationItem.Student_Grade}%
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <p className="text-sm text-gray-600 line-clamp-2 max-w-xs">{evaluationItem.Instructor_Review || 'No review'}</p>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <Eye className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete('ratings', evaluationItem.S_User_ID)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderEvaluations = () => (
+    <div className="space-y-6">
+      {renderCertificatesTable()}
+      {renderRatingsTable()}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Existing stats */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Certificates Issued</p>
+              <h3 className="text-2xl font-bold text-gray-800">{certificates.length}</h3>
+            </div>
+            <div className="bg-indigo-500 p-3 rounded-lg">
+              <Award className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Avg. Course Rating</p>
+              <h3 className="text-2xl font-bold text-gray-800">
+                {ratings.length > 0 
+                  ? (ratings.reduce((sum, r) => sum + (parseFloat(r.Course_Rating) || 0), 0) / ratings.length).toFixed(1)
+                  : '0.0'
+                }/5
+              </h3>
+            </div>
+            <div className="bg-yellow-500 p-3 rounded-lg">
+              <Star className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1424,6 +1948,7 @@ export default function AdminDashboard({ onLogout }) {
     { id: 'enrollments', label: 'Enrollments', icon: UserCheck },
     { id: 'quizzes', label: 'Quizzes', icon: FileText },
     { id: 'discussions', label: 'Discussions', icon: MessageSquare },
+    { id: 'evaluations', label: 'Evaluations', icon: Award }, 
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
@@ -1566,6 +2091,7 @@ export default function AdminDashboard({ onLogout }) {
             {activeTab === 'enrollments' && 'Enrollment Management'}
             {activeTab === 'quizzes' && 'Quiz Management'}
             {activeTab === 'discussions' && 'Discussion Management'}
+            {activeTab === 'evaluations' && "Evaluations & Certifications"}
             {activeTab === 'analytics' && 'Analytics & Reports'}
             {activeTab === 'settings' && 'System Settings'}
           </h1>
@@ -1577,6 +2103,7 @@ export default function AdminDashboard({ onLogout }) {
         {activeTab === 'content' && renderContentTable()}
         {activeTab === 'quizzes' && renderQuizzesTable()}
         {activeTab === 'discussions' && renderDiscussionsTable()}
+        {activeTab === 'evaluations' && renderEvaluations()}
         {activeTab === 'analytics' && renderAnalytics()}
         {activeTab === 'settings' && renderSettings()}
         {activeTab === 'dashboard' && (
@@ -1685,6 +2212,14 @@ export default function AdminDashboard({ onLogout }) {
           onClose={() => setShowCreateModal(false)}
         />
       )}
+      
+      {viewModalOpen && (
+        <ViewModal 
+          type={viewType} 
+          data={viewData} 
+          onClose={handleCloseViewModal} 
+        />
+      )}
 
       {showEditModal && selectedRecord && (
         <CreateEditModal
@@ -1695,6 +2230,506 @@ export default function AdminDashboard({ onLogout }) {
           onClose={() => setShowEditModal(false)}
         />
       )}
+
+      {showReplyModal && selectedDiscussion && (
+        <ReplyModal
+          discussion={selectedDiscussion}
+          comments={comments}
+          onClose={() => {
+            setShowReplyModal(false);
+            setSelectedDiscussion(null);
+            setReplyText('');
+          }}
+          onPostReply={handlePostReply}
+          replyText={replyText}
+          setReplyText={setReplyText}
+          onDeleteComment={handleDeleteComment}
+          users={users}  // Add this
+        />
+      )}
     </div>
   );
 }
+
+const ViewModal = ({ type, data, onClose }) => {
+  const renderViewContent = () => {
+    if (!data) return <div>No data to display</div>;
+    
+    switch(type) {
+      case 'users':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                {data.First_Name?.charAt(0)}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">{data.First_Name} {data.Last_Name}</h3>
+                <p className="text-gray-600">User ID: #{data.User_ID}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="font-medium">{data.Email}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Contact</p>
+                <p className="font-medium">{data.Contact_no || 'N/A'}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Role</p>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  data.Role_Type === 'instructor' ? 'bg-purple-100 text-purple-700' : 
+                  data.Role_Type === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {data.Role_Type}
+                </span>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">User ID</p>
+                <p className="font-medium">#{data.User_ID}</p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'courses':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <BookOpen className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">{data.Course_Title}</h3>
+                <p className="text-gray-600">{data.Course_Code}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Description</p>
+                <p className="text-gray-800">{data.Description}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Category</p>
+                  <p className="font-medium">{data.Category}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Difficulty</p>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    data.Difficulty_Level === 'Beginner' ? 'bg-green-100 text-green-700' :
+                    data.Difficulty_Level === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {data.Difficulty_Level}
+                  </span>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Instructor ID</p>
+                  <p className="font-medium">{data.I_USER_ID || 'N/A'}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Admin ID</p>
+                  <p className="font-medium">{data.A_USER_ID || 1}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'enrollments':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">Enrollment Details</h3>
+                <p className="text-gray-600">ID: #{data.Enrollment_ID}</p>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                data.Status === 'Completed' ? 'bg-green-100 text-green-700' :
+                data.Status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                'bg-yellow-100 text-yellow-700'
+              }`}>
+                {data.Status || 'In Progress'}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Student</p>
+                <p className="font-medium">{data.First_Name} {data.Last_Name}</p>
+                <p className="text-xs text-gray-500">ID: {data.S_User_ID}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Course</p>
+                <p className="font-medium">{data.Course_Title}</p>
+                <p className="text-xs text-gray-500">{data.Course_Code}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Enrollment Date</p>
+                <p className="font-medium">{data.enrollment_Date}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Progress</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="h-2 rounded-full bg-blue-500"
+                      style={{ width: `${((data.Lessons_Completed || 0) / (data.Total_Lessons || 10)) * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-medium">
+                    {((data.Lessons_Completed || 0) / (data.Total_Lessons || 10) * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {data.Lessons_Completed || 0}/{data.Total_Lessons || 10} lessons
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'content':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 mb-6">
+              <div className={`p-4 rounded-lg ${
+                data.Content_Type === 'Video' ? 'bg-red-100' :
+                data.Content_Type === 'Documentation' ? 'bg-blue-100' :
+                data.Content_Type === 'Presentation' ? 'bg-purple-100' : 'bg-green-100'
+              }`}>
+                {data.Content_Type === 'Video' ? <Video className="w-8 h-8 text-red-600" /> :
+                 data.Content_Type === 'Documentation' ? <FileText className="w-8 h-8 text-blue-600" /> :
+                 data.Content_Type === 'Presentation' ? <Presentation className="w-8 h-8 text-purple-600" /> :
+                 <FileCheck className="w-8 h-8 text-green-600" />}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">{data.Title}</h3>
+                <p className="text-gray-600">Content ID: #{data.ContentID}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Description</p>
+                <p className="text-gray-800">{data.Description}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Course</p>
+                  <p className="font-medium">{data.Course_Title || data.Course_Code}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Type</p>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    data.Content_Type === 'Video' ? 'bg-red-100 text-red-700' :
+                    data.Content_Type === 'Documentation' ? 'bg-blue-100 text-blue-700' :
+                    data.Content_Type === 'Presentation' ? 'bg-purple-100 text-purple-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {data.Content_Type}
+                  </span>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Upload Date</p>
+                  <p className="font-medium">{data.UploadDate}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Status</p>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    data.Status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {data.Status || 'Published'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">Content Format</p>
+                <div className="flex gap-3">
+                  <span className={`px-2 py-1 rounded text-xs ${data.Video ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+                    Video: {data.Video ? 'Yes' : 'No'}
+                  </span>
+                  <span className={`px-2 py-1 rounded text-xs ${data.Documentation ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                    Docs: {data.Documentation ? 'Yes' : 'No'}
+                  </span>
+                  <span className={`px-2 py-1 rounded text-xs ${data.Presentation ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}>
+                    Slides: {data.Presentation ? 'Yes' : 'No'}
+                  </span>
+                  <span className={`px-2 py-1 rounded text-xs ${data.Assignment ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    Assignment: {data.Assignment ? 'Yes' : 'No'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'quizzes':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <FileText className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">{data.Quiz_Title}</h3>
+                <p className="text-gray-600">Quiz #{data.Quiz_No} • Set {data.Set_No || 1}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Course</p>
+                <p className="font-medium">{data.Course_Title || data.Course_Code}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Status</p>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  data.Status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {data.Status || 'Active'}
+                </span>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Total Questions</p>
+                <p className="font-medium">{data.Total_Questions || 5}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Total Marks</p>
+                <p className="font-medium">{data.Total_Marks || 50}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Duration</p>
+                <p className="font-medium">{data.Duration || '45 min'}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Quiz ID</p>
+                <p className="font-medium">#{data.Quiz_No}</p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'discussions':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                <MessageCircle className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">Discussion #{data.DISCUSSION_ID}</h3>
+                <p className="text-gray-600">Posted: {data.Post_Date}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Post Content</p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-800">{data.Post}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Author</p>
+                  <p className="font-medium">{data.First_Name} {data.Last_Name}</p>
+                  <p className="text-xs text-gray-500">User ID: {data.User_ID}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Course</p>
+                  <p className="font-medium">{data.Course_Title || data.Course_Code}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Status</p>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    data.Status === 'Active' ? 'bg-blue-100 text-blue-700' :
+                    data.Status === 'Resolved' ? 'bg-green-100 text-green-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {data.Status || 'Active'}
+                  </span>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">Replies</p>
+                  <p className="font-medium">{data.Reply_Count || 0}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="p-4">
+            <pre className="text-sm bg-gray-50 p-3 rounded overflow-auto">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-800">
+            {type.charAt(0).toUpperCase() + type.slice(1)} Details
+          </h3>
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-gray-700 p-1"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {renderViewContent()}
+        
+        <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Add this modal component after your other modals in AdminDashboard.js
+// Update ReplyModal to accept users as prop:
+const ReplyModal = ({ 
+  discussion, 
+  comments, 
+  onClose, 
+  onPostReply, 
+  replyText, 
+  setReplyText, 
+  onDeleteComment,
+  users  // Add this
+}) => {
+  const [newReply, setNewReply] = useState(replyText);
+  const author = users?.find(u => u.User_ID === discussion.User_ID);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onPostReply();  // Changed from onPostReply(newReply)
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Discussion Replies</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Original Discussion */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+              {author?.First_Name?.charAt(0) || 'U'}
+            </div>
+            <div>
+              <p className="font-semibold text-gray-800">{author?.First_Name} {author?.Last_Name}</p>
+              <p className="text-sm text-gray-500">{discussion.Post_Date}</p>
+            </div>
+          </div>
+          <p className="text-gray-700">{discussion.Post}</p>
+        </div>
+
+        {/* Replies Section */}
+        <div className="mb-6">
+          <h4 className="font-semibold text-gray-800 mb-3">
+            Replies ({comments.length})
+          </h4>
+          
+          {comments.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">No replies yet. Be the first to reply!</p>
+          ) : (
+            <div className="space-y-4">
+              {comments.map((comment) => {
+                const commentAuthor = users?.find(u => u.User_ID === comment.User_ID);
+                return (
+                  <div key={comment.COMMENT_ID} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                          {commentAuthor?.First_Name?.charAt(0) || 'U'}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-800">
+                            {commentAuthor?.First_Name} {commentAuthor?.Last_Name}
+                          </p>
+                          <p className="text-xs text-gray-500">{comment.Comment_Date}</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => onDeleteComment(comment.COMMENT_ID)}
+                        className="p-1 hover:bg-red-50 rounded text-red-500"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-gray-700">{comment.Comment}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Add Reply Form */}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Add your reply
+            </label>
+            <textarea
+              value={newReply}
+              onChange={(e) => {
+                setNewReply(e.target.value);
+                setReplyText(e.target.value);  // Update parent state too
+              }}
+              rows="3"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Type your reply here..."
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              disabled={!newReply.trim()}
+            >
+              Post Reply
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
