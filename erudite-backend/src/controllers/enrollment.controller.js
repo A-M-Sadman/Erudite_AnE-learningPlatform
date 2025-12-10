@@ -46,12 +46,23 @@ exports.getAllEnrollments = async (req, res, next) => {
   }
 };
 
-exports.deleteEnrollment = async (req, res, next) => {
+// enrollment.controller.js
+exports.updateEnrollment = async (req, res, next) => {
   try {
-    await enrollmentService.deleteEnrollment(req.params.id);
+    const { sUserId, courseCode } = req.params; 
+    await enrollmentService.updateEnrollment(sUserId, courseCode, req.body);
     res.json({ ok: true });
   } catch (err) {
     next(err);
   }
 };
 
+exports.deleteEnrollment = async (req, res, next) => {
+  try {
+    const { sUserId, courseCode } = req.params; 
+    await enrollmentService.deleteEnrollment(sUserId, courseCode);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+};

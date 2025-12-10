@@ -191,7 +191,7 @@ export default function AdminDashboard({ onLogout }) {
           await courseAPI.update(data.Course_Code, data);
           break;
         case 'enrollments':
-          await enrollmentAPI.update(data.Enrollment_ID, data);
+          await enrollmentAPI.update(data.Enrollment_ID, data); 
           break;
         case 'content':
           await contentAPI.update(data.ContentID, data);
@@ -484,7 +484,7 @@ export default function AdminDashboard({ onLogout }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Enrollment Date</label>
-                <input type="date" value={formData.enrollment_Date || ''} onChange={e => setFormData({...formData, enrollment_Date: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
+                <input type="date" value={formData.enrollment_Date ? formData.enrollment_Date.split('T')[0] : ''} onChange={e => setFormData({...formData, enrollment_Date: e.target.value})} className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Lessons Completed</label>

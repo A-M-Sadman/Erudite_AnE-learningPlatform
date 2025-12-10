@@ -180,8 +180,23 @@ export const enrollmentAPI = {
     };
     return api.post('/enrollments', formattedData);
   },
-  
-  update: (id, data) => api.put(`/enrollments/${id}`, data),
+  update: (id, data) => {
+    const formattedData = {
+      Lessons_Completed: data.Lessons_Completed,
+      Status: data.Status, 
+      Total_Lessons: data.Total_Lessons 
+    };
+    console.log('📤 Updating enrollment:', id, formattedData);
+    return api.put(`/enrollments/${data.S_User_ID}/${data.Course_Code}`, formattedData);
+  },
+  updateComposite: (sUserId, courseCode, data) => {
+    const formattedData = {
+      lessonsCompleted: data.Lessons_Completed,
+      status: data.Status,
+      totalLessons: data.Total_Lessons
+    };
+    return api.put(`/enrollments/${sUserId}/${courseCode}`, formattedData);
+  },
   delete: (id) => api.delete(`/enrollments/${id}`)
 };
 
