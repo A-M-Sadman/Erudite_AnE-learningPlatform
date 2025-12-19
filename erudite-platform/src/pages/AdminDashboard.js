@@ -822,7 +822,7 @@ const handleDelete = async (table, item) => {
                       <Edit className="w-4 h-4 text-blue-600" />
                     </button>
                     <button 
-                      onClick={() => handleDelete('users', user.User_ID)}
+                      onClick={() => handleDelete('users', user)}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
@@ -913,7 +913,7 @@ const handleDelete = async (table, item) => {
                       <Edit className="w-4 h-4 text-blue-600" />
                     </button>
                     <button 
-                      onClick={() => handleDelete('courses', course.Course_Code)}
+                      onClick={() => handleDelete('courses', course)}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
@@ -1155,7 +1155,7 @@ const handleDelete = async (table, item) => {
                         <Edit className="w-4 h-4 text-blue-600" />
                       </button>
                       <button 
-                        onClick={() => handleDelete('content', item.ContentID)}
+                        onClick={() => handleDelete('content', item)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -1264,7 +1264,7 @@ const handleDelete = async (table, item) => {
                         <Edit className="w-4 h-4 text-blue-600" />
                       </button>
                       <button 
-                        onClick={() => handleDelete('quizzes', quiz.Quiz_No)}
+                        onClick={() => handleDelete('quizzes', quiz)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -1382,7 +1382,7 @@ const handleDelete = async (table, item) => {
                         <Edit className="w-4 h-4 text-blue-600" />
                       </button>
                       <button 
-                        onClick={() => handleDelete('discussions', discussion.DISCUSSION_ID)}
+                        onClick={() => handleDelete('discussions', discussion)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -1483,7 +1483,7 @@ const handleDelete = async (table, item) => {
                       <Download className="w-4 h-4 text-green-600" />
                     </button>
                     <button 
-                      onClick={() => handleDelete('certificates', cert.Certificate_ID)}
+                      onClick={() => handleDelete('certificates', cert)}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
