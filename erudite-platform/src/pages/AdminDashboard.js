@@ -240,16 +240,17 @@ const handleDelete = async (table, item) => {
         break;
 
       case 'content':
-        await contentAPI.delete(item.Content_ID);
+        await contentAPI.delete(item.ContentID);
         break;
 
       case 'quizzes':
         await quizAPI.delete(item.Quiz_ID);
         break;
 
-      case 'discussions':
-        await discussionAPI.delete(item.Discussion_ID);
+      case 'discussion':
+        await discussionAPI.delete(item.DISCUSSION_ID);
         break;
+
 
       case 'certificates':
         await evaluationAPI.deleteCertificate(item.Certificate_ID);
@@ -1382,7 +1383,7 @@ const handleDelete = async (table, item) => {
                         <Edit className="w-4 h-4 text-blue-600" />
                       </button>
                       <button 
-                        onClick={() => handleDelete('discussions', discussion)}
+                        onClick={() => handleDelete('discussion', discussion)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />

@@ -11,6 +11,7 @@ const discussionRoutes = require("./routes/discussion.routes");
 const commentRoutes = require('./routes/comment.routes');
 const techsupportRoutes = require("./routes/techsupport.routes");
 const evaluationRoutes = require('./routes/evaluation.routes');
+const instructorRoutes = require('./routes/instructor.routes');
 
 
 
@@ -34,6 +35,8 @@ app.use("/api/discussion", discussionRoutes);
 app.use('/api/comments', commentRoutes);
 app.use("/api/support", techsupportRoutes);
 app.use('/api/evaluation', evaluationRoutes);
+app.use('/api/instructors', instructorRoutes);
+
 
 // 404
 app.use((req, res) => res.status(404).json({ error: "Not Found" }));

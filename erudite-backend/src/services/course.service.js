@@ -80,3 +80,10 @@ exports.deleteCourse = async (code) => {
 exports.addPrerequisite = async (code, prerequisite) => {
   await db.execute("INSERT INTO COURSE_PREREQUISITE (Course_Code, Prerequisite) VALUES (?, ?)", [code, prerequisite]);
 };
+
+exports.getByInstructor = async (instructorId) => {
+  return db.execute(
+    'SELECT * FROM COURSE WHERE Instructor_ID = ?',
+    [instructorId]
+  );
+};
