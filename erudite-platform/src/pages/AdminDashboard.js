@@ -256,7 +256,11 @@ const handleDelete = async (table, item) => {
         break;
 
       case 'ratings':
-        await evaluationAPI.deleteEvaluation(item.Rating_ID);
+        await evaluationAPI.deleteEvaluation(
+          item.S_User_ID,
+          item.I_USER_ID,
+          item.Course_Code
+        );
         break;
 
       default:
@@ -1586,7 +1590,7 @@ const handleDelete = async (table, item) => {
                       <Eye className="w-4 h-4 text-gray-600" />
                     </button>
                     <button 
-                      onClick={() => handleDelete('ratings', evaluationItem.S_User_ID)}
+                      onClick={() => handleDelete('ratings', evaluationItem)}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />

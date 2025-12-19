@@ -367,7 +367,6 @@ export const discussionAPI = {
 };
 
 // Evaluation API with data transformation
-// In services/api.js - FIXED VERSION (change 'eval' to 'evaluation' or 'item')
 export const evaluationAPI = {
   // Certificates
   getAllCertificates: async () => {
