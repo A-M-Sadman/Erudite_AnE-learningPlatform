@@ -18,16 +18,18 @@ exports.getCourseEnrollments = async (courseCode) => {
   return rows;
 };
 
+// enrollment.services.js
 exports.updateEnrollment = async (sUserId, courseCode, data) => {
-  const { Lessons_Completed, Status, Total_Lessons } = data;
-  
+  const { Lessons_Completed } = data;
+
   await db.execute(
     `UPDATE ENROLLMENT 
-     SET Lessons_Completed = ?, Status = ?, Total_Lessons = ?
+     SET Lessons_Completed = ?
      WHERE S_User_ID = ? AND Course_Code = ?`,
-    [Lessons_Completed || 0, Status || 'In Progress', Total_Lessons || 10, sUserId, courseCode]
+    [Lessons_Completed ?? 0, sUserId, courseCode]
   );
 };
+
 
 exports.deleteEnrollment = async (sUserId, courseCode) => {
   await db.execute(

@@ -108,17 +108,13 @@ exports.createEvaluation = async ({ sUserId, iUserId, courseCode, courseRating, 
   }
 };
 
-exports.deleteEvaluation = async ({ sUserId, courseCode }) => {
-  try {
-    await db.execute(
-      "DELETE FROM EVALUATE WHERE S_User_ID = ? AND Course_Code = ?",
-      [sUserId, courseCode]
-    );
-  } catch (error) {
-    console.error('Error in deleteEvaluation:', error);
-    throw error;
-  }
+exports.deleteEvaluation = async ({ sUserId, iUserId, courseCode }) => {
+  await db.execute(
+    "DELETE FROM EVALUATE WHERE S_User_ID = ? AND I_USER_ID = ? AND Course_Code = ?",
+    [sUserId, iUserId, courseCode]
+  );
 };
+
 
 exports.getEvaluationById = async (sUserId, courseCode) => {
   try {

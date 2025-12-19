@@ -49,8 +49,8 @@ exports.createEvaluation = async (req, res, next) => {
 
 exports.deleteEvaluation = async (req, res, next) => {
   try {
-    const { sUserId, courseCode } = req.params;
-    await evaluationService.deleteEvaluation({ sUserId, courseCode });
+    const { sUserId, iUserId, courseCode } = req.params;
+    await evaluationService.deleteEvaluation({ sUserId, iUserId, courseCode });
     res.json({ ok: true });
   } catch (err) {
     next(err);

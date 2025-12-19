@@ -19,7 +19,6 @@ import {
   commentAPI
 } from '../services/api';
 
-
 export default function AdminDashboard({ onLogout }) {
   // State variables - ALL inside the component
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -220,45 +219,57 @@ export default function AdminDashboard({ onLogout }) {
     }
   };
 
-  const handleDelete = async (table, id) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      try {
-        switch(table) {
-          case 'users':
-            await userAPI.delete(id);
-            break;
-          case 'courses':
-            await courseAPI.delete(id);
-            break;
-          case 'enrollments':
-            await enrollmentAPI.delete(id);
-            break;
-          case 'content':
-            await contentAPI.delete(id);
-            break;
-          case 'quizzes':
-            await quizAPI.delete(id);
-            break;
-          case 'discussions':
-            await discussionAPI.delete(id);
-            break;
-          case 'certificates':
-            await evaluationAPI.deleteCertificate(id);
-            break;
-          case 'ratings':
-            await evaluationAPI.deleteEvaluation(id);
-            break;
-          default:
-            break;
-        }
-        
-        await fetchData(table);
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Error deleting record');
-      }
+const handleDelete = async (table, item) => {
+  if (!window.confirm('Are you sure you want to delete this record?')) return;
+
+  try {
+    switch (table) {
+      case 'users':
+        await userAPI.delete(item.User_ID);
+        break;
+
+      case 'courses':
+        await courseAPI.delete(item.Course_Code);
+        break;
+
+      case 'enrollments':
+        await enrollmentAPI.delete(
+          item.S_User_ID,
+          item.Course_Code
+        );
+        break;
+
+      case 'content':
+        await contentAPI.delete(item.Content_ID);
+        break;
+
+      case 'quizzes':
+        await quizAPI.delete(item.Quiz_ID);
+        break;
+
+      case 'discussions':
+        await discussionAPI.delete(item.Discussion_ID);
+        break;
+
+      case 'certificates':
+        await evaluationAPI.deleteCertificate(item.Certificate_ID);
+        break;
+
+      case 'ratings':
+        await evaluationAPI.deleteEvaluation(item.Rating_ID);
+        break;
+
+      default:
+        return;
     }
-  };
+
+    await fetchData(table);
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Error deleting record');
+  }
+};
+
 
   // Search and Filter
   const filteredData = (data, searchFields) => {
@@ -1016,7 +1027,7 @@ export default function AdminDashboard({ onLogout }) {
                         <Edit className="w-4 h-4 text-blue-600" />
                       </button>
                       <button 
-                        onClick={() => handleDelete('enrollments', enrollment.Enrollment_ID)}
+                        onClick={() => handleDelete('enrollments', enrollment)}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />

@@ -58,11 +58,7 @@ exports.updateEnrollment = async (req, res, next) => {
 };
 
 exports.deleteEnrollment = async (req, res, next) => {
-  try {
-    const { sUserId, courseCode } = req.params; 
-    await enrollmentService.deleteEnrollment(sUserId, courseCode);
-    res.json({ ok: true });
-  } catch (err) {
-    next(err);
-  }
+  const { sUserId, courseCode } = req.params;
+  await enrollmentService.deleteEnrollment(sUserId, courseCode);
+  res.json({ ok: true });
 };

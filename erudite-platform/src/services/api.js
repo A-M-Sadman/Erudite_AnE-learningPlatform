@@ -182,22 +182,25 @@ export const enrollmentAPI = {
   },
   update: (id, data) => {
     const formattedData = {
-      Lessons_Completed: data.Lessons_Completed,
-      Status: data.Status, 
-      Total_Lessons: data.Total_Lessons 
+      Lessons_Completed: data.Lessons_Completed
     };
+
     console.log('📤 Updating enrollment:', id, formattedData);
     return api.put(`/enrollments/${data.S_User_ID}/${data.Course_Code}`, formattedData);
   },
   updateComposite: (sUserId, courseCode, data) => {
     const formattedData = {
-      lessonsCompleted: data.Lessons_Completed,
-      status: data.Status,
-      totalLessons: data.Total_Lessons
-    };
+    Lessons_Completed: data.Lessons_Completed,
+    Completion_Status: data.Completion_Status,
+    Total_Lessons: data.Total_Lessons
+  };
+
     return api.put(`/enrollments/${sUserId}/${courseCode}`, formattedData);
   },
-  delete: (id) => api.delete(`/enrollments/${id}`)
+  delete: (sUserId, courseCode) => {
+    return api.delete(`/enrollments/${sUserId}/${courseCode}`);
+  }
+
 };
 
 // Content API with data transformation
@@ -444,8 +447,8 @@ export const evaluationAPI = {
   
   deleteCertificate: (id) => api.delete(`/evaluation/certificates/${id}`),
   
-  deleteEvaluation: (sUserId, courseCode) => 
-    api.delete(`/evaluation/evaluations/${sUserId}/${courseCode}`)
+  deleteEvaluation: (sUserId, iUserId, courseCode) =>
+    api.delete(`/evaluation/evaluations/${sUserId}/${iUserId}/${courseCode}`)
 };
 
 // services/api.js - Add these functions:

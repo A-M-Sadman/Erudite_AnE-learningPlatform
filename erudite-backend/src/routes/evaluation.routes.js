@@ -11,6 +11,8 @@ router.delete("/certificates/:id", evaluationController.deleteCertificate);
 router.get("/evaluations", evaluationController.getAllEvaluations);
 router.post("/evaluations", evaluationController.createEvaluation);
 router.get("/evaluations/:sUserId/:courseCode", evaluationController.getEvaluation);
-router.delete("/evaluations/:sUserId/:courseCode", evaluationController.deleteEvaluation);
+// router.delete("/evaluations/:sUserId/:courseCode", evaluationController.deleteEvaluation);
+router.delete("/evaluations/:sUserId/:iUserId/:courseCode", evaluationController.deleteEvaluation);
+
 
 module.exports = router;
