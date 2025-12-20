@@ -68,6 +68,7 @@ exports.createCourse = async (courseData) => {
     throw error;
   }
 };
+
 exports.updateCourse = async (code, payload) => {
   const { title, description, category, difficulty, iUserId } = payload;
   await db.execute("UPDATE COURSE SET Course_Title = ?, Description = ?, Category = ?, Difficulty_Level = ?, I_USER_ID = ? WHERE Course_Code = ?", [title, description, category, difficulty, iUserId, code]);

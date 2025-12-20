@@ -135,7 +135,19 @@ const instructorAPI = {
   },
 
   // Example CRUD methods for courses/quizzes/discussions if needed
-  createCourse: (data) => api.post('/courses', data).then(res => res.data),
+  createCourse: (data) => {
+    const payload = {
+        Course_Code: data.Course_Code,
+        Course_Title: data.Course_Title,
+        Description: data.Description || '',
+        I_User_ID: data.I_User_ID
+    };
+
+    console.log("🚀 FINAL CREATE COURSE PAYLOAD:", payload);
+
+    return api.post('/courses', payload).then(res => res.data);
+    },
+
   updateCourse: (id, data) => api.put(`/courses/${id}`, data).then(res => res.data),
   deleteCourse: (id) => api.delete(`/courses/${id}`).then(res => res.data),
 

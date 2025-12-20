@@ -42,6 +42,7 @@ exports.createCourse = async (req, res) => {
   }
 };
 
+
 exports.updateCourse = async (req, res, next) => {
   try {
     await courseService.updateCourse(req.params.code, req.body);
