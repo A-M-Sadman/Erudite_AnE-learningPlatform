@@ -16,58 +16,64 @@ import {
 
 // ==================== MODAL COMPONENTS ====================
 
+// Move this function OUTSIDE the component or define it before useState
+const getDefaultFormData = (type) => {
+  switch(type) {
+    case 'course':
+      return {
+        Course_Title: '',
+        Course_Code: '',
+        Description: '',
+        Category: 'Computer Science',
+        Difficulty_Level: 'Beginner',
+        I_USER_ID: 11 // Default instructor ID
+      };
+    case 'quiz':
+      return {
+        Quiz_Title: '',
+        Course_Code: '',
+        Quiz_No: 1,
+        Set_No: 1,
+        Total_Questions: 5,
+        Total_Marks: 50,
+        Duration: '45 min'
+      };
+    case 'content':
+      return {
+        Title: '',
+        Description: '',
+        Content_Type: 'Video',
+        Course_Code: '',
+        UploadDate: new Date().toISOString().split('T')[0]
+      };
+    case 'discussion':
+      return {
+        Post: '',
+        Course_Code: '',
+        User_ID: 11,
+        Post_Date: new Date().toISOString().split('T')[0]
+      };
+    default:
+      return {};
+  }
+};
+
 const CreateEditModal = ({ isEdit, type, record, onSave, onClose, courses }) => {
+  // Now use the function that's defined above
   const [formData, setFormData] = useState(
     isEdit && record ? { ...record } : getDefaultFormData(type)
   );
 
-  const getDefaultFormData = (type) => {
-    switch(type) {
-      case 'course':
-        return {
-          Course_Title: '',
-          Course_Code: '',
-          Description: '',
-          Category: 'Computer Science',
-          Difficulty_Level: 'Beginner',
-          I_USER_ID: 11 // Default instructor ID
-        };
-      case 'quiz':
-        return {
-          Quiz_Title: '',
-          Course_Code: '',
-          Quiz_No: 1,
-          Set_No: 1,
-          Total_Questions: 10,
-          Total_Marks: 100,
-          Duration: '60 min'
-        };
-      case 'content':
-        return {
-          Title: '',
-          Description: '',
-          Content_Type: 'Video',
-          Course_Code: '',
-          UploadDate: new Date().toISOString().split('T')[0]
-        };
-      case 'discussion':
-        return {
-          Post: '',
-          Course_Code: '',
-          User_ID: 11,
-          Post_Date: new Date().toISOString().split('T')[0]
-        };
-      default:
-        return {};
-    }
-  };
-
+  // ... rest of the component remains the same
   useEffect(() => {
     if (isEdit && record) {
       console.log('Editing record:', record);
       setFormData({ ...record });
+    } else if (!isEdit) {
+      // Reset to default form data when creating new
+      setFormData(getDefaultFormData(type));
     }
-  }, [isEdit, record]);
+  }, [isEdit, record, type]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
