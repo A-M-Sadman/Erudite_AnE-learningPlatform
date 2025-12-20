@@ -8,7 +8,7 @@ router.get("/:quizNo/:setNo", quizController.getQuiz);
 // router.get("/:id", quizController.getQuizById); // ADD THIS (optional)
 router.post("/", quizController.createQuiz);
 router.put('/:id', quizController.updateQuiz);
-router.delete("/:id", quizController.deleteQuiz); // ADD THIS
+router.delete('/:quizNo/:setNo', quizController.deleteQuiz); // ADD THIS
 router.post("/questions", quizController.addQuestions);
 router.post("/solve", quizController.solveQuiz);
 router.post("/marks", quizController.addMark);

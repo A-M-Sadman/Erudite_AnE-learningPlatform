@@ -55,28 +55,16 @@ exports.getAllQuizzes = async () => {
 };
 
 // quiz.service.js - fix deleteQuiz function
-exports.deleteQuiz = async (quizNo) => {
-  try {
-    console.log('🗑️ Deleting quiz, quizNo:', quizNo);
-    
-    // Check if quizNo is valid
-    if (quizNo === undefined || quizNo === null) {
-      throw new Error('Quiz number is required for deletion');
-    }
-    
-    const sql = 'DELETE FROM QUIZ WHERE Quiz_No = ?';
-    console.log('📝 Delete SQL:', sql);
-    console.log('📝 Delete parameter:', quizNo);
-    
-    const [result] = await db.execute(sql, [quizNo]);
-    
-    console.log('✅ Delete result:', result.affectedRows, 'rows affected');
-    return result.affectedRows > 0;
-  } catch (error) {
-    console.error('❌ Error deleting quiz:', error);
-    throw error;
-  }
+exports.deleteQuiz = async (quizNo, setNo) => {
+  const sql = `
+    DELETE FROM quiz
+    WHERE Quiz_No = ? AND Set_No = ?
+  `;
+
+  const [result] = await db.execute(sql, [quizNo, setNo]);
+  return result.affectedRows > 0;
 };
+
 
 // quiz.service.js - fix updateQuiz function
 exports.updateQuiz = async (quizNo, data) => {

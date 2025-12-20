@@ -304,16 +304,12 @@ export const quizAPI = {
     console.log('📤 Updating quiz:', formattedData);
     return api.put(`/quiz/${id}`, formattedData);
   },
-  delete: (id) => {
-    console.log('📞 Deleting quiz ID:', id);
-    
-    // Check if id is valid
-    if (!id) {
-      console.error('❌ No quiz ID provided for deletion');
-      return Promise.reject(new Error('Quiz ID is required'));
+  delete: (quizNo, setNo) => {
+    if (!quizNo || setNo === undefined) {
+      return Promise.reject(new Error('Quiz_No and Set_No are required'));
     }
-    
-    return api.delete(`/quiz/${id}`);
+
+    return api.delete(`/quiz/${quizNo}/${setNo}`);
   },
 };
 

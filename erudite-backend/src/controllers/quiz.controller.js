@@ -89,31 +89,24 @@ exports.updateQuiz = async (req, res) => {
 // quiz.controller.js - fix deleteQuiz
 exports.deleteQuiz = async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    console.log('🗑️ Received delete request for quiz ID:', id);
-    console.log('🗑️ Request params:', req.params);
-    
-    // Validate ID
-    if (!id) {
-      return res.status(400).json({ error: 'Quiz ID is required' });
+    const { quizNo, setNo } = req.params;
+
+    if (!quizNo || setNo === undefined) {
+      return res.status(400).json({ error: 'Quiz_No and Set_No are required' });
     }
-    
-    // Convert to number if needed
-    const quizNo = parseInt(id);
-    if (isNaN(quizNo)) {
-      return res.status(400).json({ error: 'Invalid quiz ID format' });
+
+    const result = await quizService.deleteQuiz(
+      parseInt(quizNo),
+      parseInt(setNo)
+    );
+
+    if (!result) {
+      return res.status(404).json({ error: 'Quiz not found' });
     }
-    
-    const result = await quizService.deleteQuiz(quizNo);
-    
-    if (result) {
-      res.json({ message: 'Quiz deleted successfully' });
-    } else {
-      res.status(404).json({ error: 'Quiz not found' });
-    }
-  } catch (error) {
-    console.error('❌ Error deleting quiz:', error);
-    res.status(500).json({ error: error.message });
+
+    res.json({ message: 'Quiz deleted successfully' });
+  } catch (err) {
+    console.error('❌ Error deleting quiz:', err);
+    res.status(500).json({ error: err.message });
   }
 };

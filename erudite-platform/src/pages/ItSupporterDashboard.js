@@ -1391,7 +1391,7 @@ export default function ITSupportDashboard({ onLogout }) {
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-gray-800">Erudite LMS</h1>
+                <h1 className="font-bold text-gray-800">Erudite </h1>
                 <p className="text-xs text-gray-500">IT Support Panel</p>
               </div>
             </div>
