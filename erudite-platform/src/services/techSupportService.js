@@ -11,3 +11,9 @@ export const getTicket = (problemId) =>
 
 export const addSolution = (problemId, data) =>
   api.post(`/support/${problemId}/solution`, data);
+
+// Add these to your techSupportService.js
+export const getAllTickets = () => api.get("/support/tickets");
+export const getTicketById = (problemId) => api.get(`/support/tickets/${problemId}`);
+export const updateTicket = (problemId, data) => api.put(`/support/tickets/${problemId}`, data);
+export const assignTicket = (problemId, userId) => api.post(`/support/tickets/${problemId}/assign`, { userId });
